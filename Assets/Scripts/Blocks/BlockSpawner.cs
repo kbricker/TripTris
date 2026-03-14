@@ -22,11 +22,16 @@ namespace TripTris.Blocks
         private Block activeBlockComponent;
         private float fallTimer;
 
+        // Color override for testing (-1 = random)
+        private int nextColorOverride = -1;
+
         // Grid reference (will be set by GridManager or found at runtime)
         private GridManager gridManager;
 
         void Start()
         {
+            // Subscribe to setcolor commands from UniFlow
+            UniFlow.UniFlowController.OnSetColor += HandleSetColor;
             // Find GridManager if not set
             if (gridManager == null)
             {
@@ -106,16 +111,26 @@ namespace TripTris.Blocks
                 activeBlockComponent = activeFallingBlock.AddComponent<Block>();
             }
 
-            // Set random color
-            int randomColor = Random.Range(0, BlockColors.ColorCount);
-            activeBlockComponent.SetColor(randomColor);
+            // Set color (use override if set, otherwise random)
+            // Override persists until cleared with "random" or "-1"
+            int colorIndex;
+            if (nextColorOverride >= 0 && nextColorOverride < BlockColors.ColorCount)
+            {
+                colorIndex = nextColorOverride;
+                Debug.Log($"[BlockSpawner] Using color override: {colorIndex}");
+            }
+            else
+            {
+                colorIndex = Random.Range(0, BlockColors.ColorCount);
+            }
+            activeBlockComponent.SetColor(colorIndex);
 
             // Set initial grid position (matches world position now)
             activeBlockComponent.SetGridPosition(spawnX, spawnY);
 
             fallTimer = 0f;
 
-            Debug.Log($"[BlockSpawner] Spawned block at ({spawnX}, {spawnY}) with color {randomColor}");
+            Debug.Log($"[BlockSpawner] Spawned block at ({spawnX}, {spawnY}) with color {colorIndex}");
         }
 
         /// <summary>
@@ -268,6 +283,25 @@ namespace TripTris.Blocks
         public GameObject GetActiveFallingBlock()
         {
             return activeFallingBlock;
+        }
+
+        private void HandleSetColor(string value)
+        {
+            if (value == "random" || value == "-1")
+            {
+                nextColorOverride = -1;
+                Debug.Log("[BlockSpawner] Color override cleared (random)");
+            }
+            else if (int.TryParse(value, out int colorIndex))
+            {
+                nextColorOverride = colorIndex;
+                Debug.Log($"[BlockSpawner] Next block color override: {colorIndex}");
+            }
+        }
+
+        void OnDestroy()
+        {
+            UniFlow.UniFlowController.OnSetColor -= HandleSetColor;
         }
     }
 }

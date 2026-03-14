@@ -7,12 +7,13 @@ namespace TripTris.Core
     /// </summary>
     public static class BlockColors
     {
-        public const float EmissionIntensity = 2.5f;
+        public const float EmissionIntensity = 1.5f;
 
-        public static readonly Color Ruby = new Color(0.9f, 0.15f, 0.15f);
-        public static readonly Color Emerald = new Color(0.15f, 0.85f, 0.35f);
-        public static readonly Color Sapphire = new Color(0.15f, 0.35f, 0.95f);
-        public static readonly Color Amber = new Color(1.0f, 0.75f, 0.15f);
+        // Deep saturated jewel colors (less washed out with lower emission)
+        public static readonly Color Ruby = new Color(1.0f, 0.08f, 0.08f);
+        public static readonly Color Emerald = new Color(0.05f, 0.95f, 0.2f);
+        public static readonly Color Sapphire = new Color(0.08f, 0.25f, 1.0f);
+        public static readonly Color Amber = new Color(1.0f, 0.65f, 0.0f);
 
         private static readonly Color[] AllColors = new Color[]
         {

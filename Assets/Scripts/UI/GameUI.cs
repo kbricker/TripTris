@@ -13,7 +13,7 @@ namespace TripTris.UI
     public class GameUI : MonoBehaviour
     {
         // Version tracking - this MUST change for recompilation
-        private const string UI_VERSION = "v4-top-left";
+        private const string UI_VERSION = "v5-larger-panel";
 
         [Header("UI Elements")]
         private Text titleText;
@@ -23,8 +23,8 @@ namespace TripTris.UI
         private Text rowsText;
 
         [Header("UI Settings")]
-        [SerializeField] private int titleFontSize = 28;
-        [SerializeField] private int fontSize = 22;
+        [SerializeField] private int titleFontSize = 36;
+        [SerializeField] private int fontSize = 28;
         [SerializeField] private Color titleColor = new Color(1f, 0.8f, 0.2f); // Gold
         [SerializeField] private Color textColor = Color.white;
         [SerializeField] private Color backgroundColor = new Color(0.1f, 0.1f, 0.2f, 0.95f);
@@ -32,8 +32,8 @@ namespace TripTris.UI
 
         [Header("Layout")]
         [SerializeField] private float edgeOffset = 20f;  // Offset from screen edge
-        [SerializeField] private float padding = 15f;     // Internal padding
-        [SerializeField] private float lineSpacing = 28f;
+        [SerializeField] private float padding = 20f;     // Internal padding
+        [SerializeField] private float lineSpacing = 36f;
         [SerializeField] private float borderWidth = 3f;
 
         private GameObject uiPanel;
@@ -72,7 +72,7 @@ namespace TripTris.UI
             borderRect.anchorMax = new Vector2(0f, 1f);
             borderRect.pivot = new Vector2(0f, 1f);
             borderRect.anchoredPosition = new Vector2(edgeOffset, -edgeOffset);
-            borderRect.sizeDelta = new Vector2(160f, 155f);  // Compact panel
+            borderRect.sizeDelta = new Vector2(240f, 220f);  // Enlarged panel
 
             // Create inner background panel
             uiPanel = new GameObject("UI Panel");

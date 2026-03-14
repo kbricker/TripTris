@@ -84,14 +84,14 @@ namespace TripTris.Core
         /// </summary>
         private static void SetupGameManagers()
         {
-            // Create GameManager
+            // Create GridManager FIRST so GameManager.FindReferences() finds it
+            GameObject gridManagerObj = new GameObject("GridManager");
+            var gridManager = gridManagerObj.AddComponent<GridManager>();
+
+            // Create GameManager (Awake->FindReferences will find GridManager above)
             GameObject gameManagerObj = new GameObject("GameManager");
             var gameManager = gameManagerObj.AddComponent<GameManager>();
             Object.DontDestroyOnLoad(gameManagerObj);
-
-            // Create GridManager
-            GameObject gridManagerObj = new GameObject("GridManager");
-            var gridManager = gridManagerObj.AddComponent<GridManager>();
 
             // Create BlockSpawner
             GameObject spawnerObj = new GameObject("BlockSpawner");
@@ -153,13 +153,13 @@ namespace TripTris.Core
             VolumeProfile profile = ScriptableObject.CreateInstance<VolumeProfile>();
             volume.profile = profile;
 
-            // Add Bloom effect
+            // Add Bloom effect (subtle glow, not washed out)
             Bloom bloom = profile.Add<Bloom>(true);
-            bloom.intensity.value = 2f;
+            bloom.intensity.value = 0.6f;
             bloom.intensity.overrideState = true;
-            bloom.threshold.value = 0.5f;
+            bloom.threshold.value = 1.2f;
             bloom.threshold.overrideState = true;
-            bloom.scatter.value = 0.7f;
+            bloom.scatter.value = 0.4f;
             bloom.scatter.overrideState = true;
             bloom.tint.value = Color.white;
             bloom.tint.overrideState = true;

@@ -1,4 +1,6 @@
 // TripTris Game Manager - Core game controller
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using TripTris.Blocks;
@@ -95,11 +97,6 @@ namespace TripTris.Core
             if (gridManager == null)
             {
                 gridManager = FindAnyObjectByType<GridManager>();
-                if (gridManager == null)
-                {
-                    GameObject gridGO = new GameObject("GridManager");
-                    gridManager = gridGO.AddComponent<GridManager>();
-                }
             }
 
             if (blockSpawner == null)
@@ -186,49 +183,75 @@ namespace TripTris.Core
                 return;
             }
 
-            int rowsClearedThisTurn = 0;
-            int colorMatchRowsClearedThisTurn = 0;
-
+            // Collect all color-matched rows (full row of same color)
+            var completedRows = new System.Collections.Generic.List<int>();
             for (int y = 0; y < GridManager.GridHeight; y++)
             {
-                if (gridManager.IsRowComplete(y))
+                if (gridManager.IsRowSameColor(y))
                 {
-                    bool isColorMatch = gridManager.IsRowSameColor(y);
-
-                    Block[] clearedBlocks = gridManager.ClearRow(y);
-                    foreach (Block block in clearedBlocks)
-                    {
-                        if (block != null)
-                        {
-                            Destroy(block.gameObject);
-                        }
-                    }
-
-                    gridManager.CollapseRowsAbove(y);
-
-                    rowsClearedThisTurn++;
-                    rowsCleared++;
-
-                    if (isColorMatch)
-                    {
-                        colorMatchRowsClearedThisTurn++;
-                        colorMatchRowsCleared++;
-                        score += pointsPerColorMatchRow;
-                        Debug.Log($"Color Match Row Cleared! Bonus: {pointsPerColorMatchRow} points");
-                    }
-                    else
-                    {
-                        score += pointsPerRow;
-                    }
-
-                    y--;
+                    completedRows.Add(y);
                 }
             }
 
-            if (rowsClearedThisTurn > 0)
+            if (completedRows.Count > 0)
             {
-                Debug.Log($"Cleared {rowsClearedThisTurn} row(s). Color matches: {colorMatchRowsClearedThisTurn}");
+                StartCoroutine(ClearRowsAnimated(completedRows));
             }
+        }
+
+        private System.Collections.IEnumerator ClearRowsAnimated(System.Collections.Generic.List<int> rows)
+        {
+            // Phase 1: Flash all blocks in completed rows simultaneously
+            var flashCoroutines = new System.Collections.Generic.List<Coroutine>();
+            var allBlocks = new System.Collections.Generic.List<Block>();
+
+            foreach (int y in rows)
+            {
+                for (int x = 0; x < GridManager.GridWidth; x++)
+                {
+                    Block block = gridManager.GetBlockAt(x, y);
+                    if (block != null)
+                    {
+                        allBlocks.Add(block);
+                        flashCoroutines.Add(StartCoroutine(block.Flash()));
+                    }
+                }
+            }
+
+            // Wait for all flash animations to complete
+            foreach (var coroutine in flashCoroutines)
+            {
+                yield return coroutine;
+            }
+
+            // Phase 2: Clear rows and update score (process from top to bottom to handle index shifting)
+            int rowsClearedThisTurn = 0;
+            int colorMatchRowsClearedThisTurn = 0;
+
+            // Sort rows descending so collapse doesn't shift unchecked rows
+            rows.Sort((a, b) => b.CompareTo(a));
+
+            foreach (int y in rows)
+            {
+                Block[] clearedBlocks = gridManager.ClearRow(y);
+                foreach (Block block in clearedBlocks)
+                {
+                    if (block != null)
+                    {
+                        Destroy(block.gameObject);
+                    }
+                }
+
+                gridManager.CollapseRowsAbove(y);
+
+                rowsClearedThisTurn++;
+                rowsCleared++;
+                colorMatchRowsCleared++;
+                score += pointsPerColorMatchRow;
+                Debug.Log($"[TripTris] Color Match Row {y} Cleared! +{pointsPerColorMatchRow} pts");
+            }
+
+            Debug.Log($"[TripTris] Cleared {rowsClearedThisTurn} row(s). Score: {score}");
         }
 
         private void CheckLevelUp()
@@ -237,7 +260,13 @@ namespace TripTris.Core
             if (newLevel > level)
             {
                 level = newLevel;
-                Debug.Log($"Level Up! Now at level {level}");
+                // Speed increases each level: 0.8s base, -0.07s per level, min 0.1s
+                float newSpeed = 0.8f - (level - 1) * 0.07f;
+                if (blockSpawner != null)
+                {
+                    blockSpawner.SetFallSpeed(newSpeed);
+                }
+                Debug.Log($"Level Up! Now at level {level}, speed: {newSpeed:F2}s");
             }
         }
 
