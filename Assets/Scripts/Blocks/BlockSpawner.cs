@@ -30,8 +30,9 @@ namespace TripTris.Blocks
 
         void Start()
         {
-            // Subscribe to setcolor commands from UniFlow
+            // Subscribe to UniFlow commands
             UniFlow.UniFlowController.OnSetColor += HandleSetColor;
+            UniFlow.UniFlowController.OnMove += MoveToColumnAndDrop;
             // Find GridManager if not set
             if (gridManager == null)
             {
@@ -299,9 +300,52 @@ namespace TripTris.Blocks
             }
         }
 
+        /// <summary>
+        /// Instantly move the current block to target column and hard drop.
+        /// Called by UniFlow "move" command for AI gameplay.
+        /// </summary>
+        public void MoveToColumnAndDrop(int targetCol)
+        {
+            if (activeFallingBlock == null || activeBlockComponent == null)
+            {
+                Debug.LogWarning("[BlockSpawner] No active block to move");
+                return;
+            }
+
+            // Clamp to grid bounds
+            targetCol = Mathf.Clamp(targetCol, 0, GridManager.GridWidth - 1);
+
+            // Move horizontally
+            int currentY = activeBlockComponent.gridY;
+            if (CanMoveTo(targetCol, currentY))
+            {
+                activeBlockComponent.SetGridPosition(targetCol, currentY);
+                activeFallingBlock.transform.position = new Vector3(targetCol, currentY, 0f);
+            }
+            else
+            {
+                Debug.LogWarning($"[BlockSpawner] Cannot move to column {targetCol}");
+                return;
+            }
+
+            // Hard drop: find lowest valid Y
+            int lowestY = currentY;
+            while (CanMoveTo(targetCol, lowestY - 1))
+            {
+                lowestY--;
+            }
+
+            activeBlockComponent.SetGridPosition(targetCol, lowestY);
+            activeFallingBlock.transform.position = new Vector3(targetCol, lowestY, 0f);
+
+            Debug.Log($"[BlockSpawner] AI move: col {targetCol}, landed at ({targetCol}, {lowestY})");
+            LockBlock();
+        }
+
         void OnDestroy()
         {
             UniFlow.UniFlowController.OnSetColor -= HandleSetColor;
+            UniFlow.UniFlowController.OnMove -= MoveToColumnAndDrop;
         }
     }
 }

@@ -21,6 +21,7 @@ namespace TripTris.UI
         private Text levelText;
         private Text blocksText;
         private Text rowsText;
+        private Text gameOverText;
 
         [Header("UI Settings")]
         [SerializeField] private int titleFontSize = 36;
@@ -112,11 +113,34 @@ namespace TripTris.UI
             // Rows
             rowsText = CreateTextElement("Rows Text", yOffset, fontSize - 2, new Color(0.8f, 0.8f, 0.8f), TextAnchor.MiddleLeft);
 
-            // Debug positioning info
-            Debug.Log($"[GameUI] Screen: {Screen.width}x{Screen.height}");
-            Debug.Log($"[GameUI] Border anchor: ({borderRect.anchorMin}, {borderRect.anchorMax})");
-            Debug.Log($"[GameUI] Border pos: {borderRect.anchoredPosition}, size: {borderRect.sizeDelta}");
-            Debug.Log($"[GameUI] Parent rect: {((RectTransform)borderPanel.transform.parent).rect}");
+            // Game Over overlay - large centered text, hidden by default
+            GameObject goObj = new GameObject("Game Over Text");
+            goObj.transform.SetParent(parentTransform, false);
+            RectTransform goRect = goObj.AddComponent<RectTransform>();
+            goRect.anchorMin = new Vector2(0.5f, 0.5f);
+            goRect.anchorMax = new Vector2(0.5f, 0.5f);
+            goRect.pivot = new Vector2(0.5f, 0.5f);
+            goRect.anchoredPosition = Vector2.zero;
+            goRect.sizeDelta = new Vector2(600f, 200f);
+
+            gameOverText = goObj.AddComponent<Text>();
+            Font font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            if (font == null) font = Font.CreateDynamicFontFromOSFont("Arial", 80);
+            gameOverText.font = font;
+            gameOverText.fontSize = 80;
+            gameOverText.color = new Color(1f, 0.2f, 0.2f);
+            gameOverText.alignment = TextAnchor.MiddleCenter;
+            gameOverText.fontStyle = FontStyle.Bold;
+            gameOverText.text = "GAME OVER";
+            gameOverText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            gameOverText.verticalOverflow = VerticalWrapMode.Overflow;
+
+            Outline goOutline = goObj.AddComponent<Outline>();
+            goOutline.effectColor = Color.black;
+            goOutline.effectDistance = new Vector2(3f, -3f);
+
+            goObj.SetActive(false); // hidden until game over
+
             Debug.Log("[GameUI] UI created successfully");
         }
 
@@ -186,6 +210,12 @@ namespace TripTris.UI
             if (rowsText != null)
             {
                 rowsText.text = $"Rows: {GameManager.Instance.RowsCleared}";
+            }
+
+            if (gameOverText != null)
+            {
+                gameOverText.gameObject.SetActive(
+                    GameManager.Instance.CurrentState == GameManager.GameState.GameOver);
             }
         }
 
