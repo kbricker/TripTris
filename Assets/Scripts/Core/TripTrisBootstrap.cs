@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using UnityEngine.SceneManagement;
 using TripTris.Blocks;
 using TripTris.UI;
 using TripTrisPlayerInput = TripTris.Input.PlayerInput;
@@ -21,6 +22,9 @@ namespace TripTris.Core
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Initialize()
         {
+            // Only run in SampleScene (skip HexScene and other scenes)
+            if (SceneManager.GetActiveScene().name != "SampleScene") return;
+
             Debug.Log("[TripTris] Starting game initialization...");
 
             SetupCamera();
